@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        #barrel-text, #celebration {
+            font-size: 20px;
+            font-weight: bold;
+            color: black;
+        }
+        #barrel-text {
+            margin-top: 20px;
+        }
+        #barrel {
+            width: 400px;
+            height: 400px;
+            background-image: url('barrel.jfif');
+            background-size: cover;
+            border-radius: 10px;
+            position: relative;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .apple {
+            width: 50px;
+            height: 50px;
+            position: absolute;
+            transition: bottom 0.3s ease-in-out;
+        }
+        #celebration {
+            display: none;
+            margin-top: 20px;
+        }
+        #button-container {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="barrel-text">0 apples</div>
+        <div id="barrel"></div>
+
+        <div id="button-container">
+            <button id="arrowButton">Add Apple</button>
+            <button id="reset">Reset</button>
+        </div>
+
+        <div id="celebration">🎉 Celebration! 🎉</div>
+    </div>
+
+    <script>
+        var applesInBarrel = 0;
+        var totalApples = 20;
+        var applesPerColumn = 5;
+        var columns = 4;
+        var columnSpacing = 50;
+        var appleHeight = 50;
+        var barrelDiv = document.getElementById('barrel');
+        var barrelText = document.getElementById('barrel-text');
+        var celebrationDiv = document.getElementById('celebration');
+        var applesInColumns = [0, 0, 0, 0];
+        var rightOffset = 100;
+
+        function createApple(columnIndex, appleIndex) {
+            var apple = document.createElement('img');
+            apple.src = 'apple.jpg';
+            apple.className = 'apple';
+            apple.style.left = (columnIndex * columnSpacing + rightOffset) + "px";
+            apple.style.bottom = (appleIndex * appleHeight + 50) + "px";
+            barrelDiv.appendChild(apple);
+        }
+
+        function speakAppleCount(count) {
+            var speakText = new SpeechSynthesisUtterance(count.toString());
+            speechSynthesis.speak(speakText);
+        }
+
+        var addButton = document.getElementById('arrowButton');
+        addButton.onclick = function() {
+            addButton.disabled = true;
+
+            if (applesInBarrel < totalApples) {
+                applesInBarrel++;
+
+                var columnIndex = -1;
+                for (var i = 0; i < columns; i++) {
+                    if (applesInColumns[i] < applesPerColumn) {
+                        columnIndex = i;
+                        break;
+                    }
+                }
+
+                if (columnIndex !== -1) {
+                    createApple(columnIndex, applesInColumns[columnIndex]);
+                    applesInColumns[columnIndex]++;
+                    barrelText.textContent = applesInBarrel + " apples";
+
+                    setTimeout(function() {
+                        speakAppleCount(applesInBarrel);
+                    }, 500);
+
+                    if (applesInBarrel === totalApples) {
+                        celebrationDiv.style.display = 'block';
+                    }
+                }
+            }
+
+            setTimeout(function() {
+                addButton.disabled = false;
+            }, 1500);
+        };
+
+        var resetButton = document.getElementById('reset');
+        resetButton.onclick = function() {
+            applesInBarrel = 0;
+            applesInColumns = [0, 0, 0, 0];
+            barrelDiv.innerHTML = '';
+            barrelText.textContent = '0 apples';
+            celebrationDiv.style.display = 'none';
+        };
+    </script>
+</body>
+</html>
