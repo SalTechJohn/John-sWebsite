@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scale</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            margin: 20px;
+        }
+
+        #scale {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            margin: 50px 0;
+        }
+
+        .horizontal-line {
+            width: 600px;
+            height: 10px;
+            background-color: black;
+            position: relative;
+            transform-origin: center center;
+            transition: transform 0.3s;
+        }
+
+        .vertical-line {
+            width: 10px;
+            background-color: black;
+            position: absolute;
+            top: 10px;
+            transition: transform 0.3s, height 0.3s;
+            height: 100px;
+        }
+
+        .left-line {
+            left: 25%;
+        }
+
+        .right-line {
+            right: 25%;
+        }
+
+        .container {
+            width: 150px;
+            height: 150px;
+            border: 2px solid black;
+            background-color: #d5a24a;
+            position: absolute;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start;
+            overflow: hidden;
+            transition: top 0.3s;
+            padding: 5px; 
+        }
+
+        #left-container {
+            left: 12.5%;
+            top: 120px; 
+        }
+
+        #right-container {
+            right: 12.5%;
+            top: 120px; 
+        }
+
+        .apple {
+            width: 30px;
+            height: 30px;
+            background-image: url('apple.jpg');
+            background-size: cover;
+            border-radius: 50%;
+            margin: 1px; 
+        }
+
+        .controls {
+            margin-top: 350px;
+            position: relative;
+            transition: margin-top 0.3s;
+        }
+
+        button {
+            margin: 0 15px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #center-line {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            width: 10px;
+            height: 300px;
+            background-color: black;
+            transform: translateX(-50%);
+        }
+
+        #apple-counts {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        #left-count, #right-count {
+            font-weight: normal;
+        }
+
+        #comparison {
+            font-size: 18px;
+            margin-top: 10px;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        #back-to-barrel {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Scale</h1>
+    <div id="scale">
+        <div id="center-line"></div>
+        <div class="vertical-line left-line" id="left-line"></div>
+        <div class="container" id="left-container"></div>
+        <div class="horizontal-line" id="horizontal-line"></div>
+        <div class="vertical-line right-line" id="right-line"></div>
+        <div class="container" id="right-container"></div>
+    </div>
+    <div class="controls" id="controls">
+        <button onclick="addApple('left')">Add to Left</button>
+        <button onclick="addApple('right')">Add to Right</button>
+        <button onclick="resetScale()">Reset</button>
+    </div>
+
+    <div id="apple-counts">
+        <div>Left side: <span id="left-count">0</span> apples</div>
+        <div>Right side: <span id="right-count">0</span> apples</div>
+    </div>
+
+    <div id="comparison">
+        Left side <span id="comparison-symbol">=</span> Right side
+    </div>
+
+    <button id="back-to-barrel" onclick="backToBarrel()">Back to Barrel</button>
+
+    <script>
+        const leftLine = document.getElementById('left-line');
+        const rightLine = document.getElementById('right-line');
+        const leftContainer = document.getElementById('left-container');
+        const rightContainer = document.getElementById('right-container');
+        const horizontalLine = document.getElementById('horizontal-line');
+        const centerLine = document.getElementById('center-line');
+        const controls = document.getElementById('controls');
+        const leftCountElement = document.getElementById('left-count');
+        const rightCountElement = document.getElementById('right-count');
+        const comparisonSymbolElement = document.getElementById('comparison-symbol');
+        const comparisonContainer = document.getElementById('comparison');
+        let isSpeaking = false;
+
+        function addApple(side) {
+            if (isSpeaking) {
+                return;
+            }
+
+            const apple = document.createElement('div');
+            apple.classList.add('apple');
+
+            if (side === 'left' && leftContainer.childElementCount < 20) {
+                leftContainer.appendChild(apple);
+            } else if (side === 'right' && rightContainer.childElementCount < 20) {
+                rightContainer.appendChild(apple);
+            }
+
+            adjustScale();
+            updateAppleCount();
+            speakAppleCount(side);
+            updateComparison();
+        }
+
+        function adjustScale() {
+            const leftCount = leftContainer.childElementCount;
+            const rightCount = rightContainer.childElementCount;
+
+            const leftHeight = 100 + leftCount * 10;
+            const rightHeight = 100 + rightCount * 10;
+
+            leftLine.style.height = `${leftHeight}px`;
+            rightLine.style.height = `${rightHeight}px`;
+
+            leftContainer.style.top = `${120 + leftCount * 10}px`;
+            rightContainer.style.top = `${120 + rightCount * 10}px`;
+
+            const difference = leftCount - rightCount;
+            const rotationAngle = -difference * 1.75;
+            horizontalLine.style.transform = `rotate(${rotationAngle}deg)`;
+
+            const tiltAmount = difference * 5;
+            leftLine.style.transform = `translateY(${tiltAmount}px)`;
+            rightLine.style.transform = `translateY(${-tiltAmount}px)`;
+
+            leftContainer.style.transform = `translateY(${tiltAmount}px)`;
+            rightContainer.style.transform = `translateY(${-tiltAmount}px)`;
+
+            const maxCount = Math.max(leftCount, rightCount);
+            controls.style.marginTop = `${350 + maxCount * 10}px`;
+        }
+
+        function resetScale() {
+            leftContainer.innerHTML = '';
+            rightContainer.innerHTML = '';
+
+            leftLine.style.height = '100px';
+            rightLine.style.height = '100px';
+
+            leftContainer.style.top = '120px';
+            rightContainer.style.top = '120px';
+
+            horizontalLine.style.transform = 'rotate(0deg)';
+            leftLine.style.transform = 'translateY(0)';
+            rightLine.style.transform = 'translateY(0)';
+
+            leftContainer.style.transform = 'translateY(0)';
+            rightContainer.style.transform = 'translateY(0)';
+
+            controls.style.marginTop = '350px';
+            leftCountElement.textContent = '0';
+            rightCountElement.textContent = '0';
+            comparisonSymbolElement.textContent = '=';
+            comparisonContainer.classList.remove("bold", "left-bold", "right-bold");
+        }
+
+        function updateAppleCount() {
+            const leftCount = leftContainer.childElementCount;
+            const rightCount = rightContainer.childElementCount;
+
+            leftCountElement.textContent = leftCount;
+            rightCountElement.textContent = rightCount;
+        }
+
+        function speakAppleCount(side) {
+            const count = side === 'left' ? leftContainer.childElementCount : rightContainer.childElementCount;
+            const sideText = side === 'left' ? 'Left side' : 'Right side';
+
+            const utterance = new SpeechSynthesisUtterance(`${sideText} ${count} apples.`);
+            utterance.onstart = function() {
+                isSpeaking = true;
+            };
+            utterance.onend = function() {
+                isSpeaking = false;
+            };
+
+            speechSynthesis.speak(utterance);
+        }
+
+        function updateComparison() {
+            const leftCount = leftContainer.childElementCount;
+            const rightCount = rightContainer.childElementCount;
+
+            let comparisonSymbol = "=";
+            if (leftCount > rightCount) {
+                comparisonSymbol = ">";
+                comparisonContainer.classList.add("left-bold");
+            } else if (leftCount < rightCount) {
+                comparisonSymbol = "<";
+                comparisonContainer.classList.add("right-bold");
+            }
+
+            comparisonSymbolElement.textContent = comparisonSymbol;
+
+            comparisonContainer.classList.remove("left-bold", "right-bold");
+        }
+
+        function backToBarrel() {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
